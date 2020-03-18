@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "428783291330",
+    "firebase_url": "https://possible-flame-271418.firebaseio.com",
+    "project_id": "possible-flame-271418",
+    "storage_bucket": "possible-flame-271418.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428783291330:android:de8be0ebc0b9774b1f645b",
+        "android_client_info": {
+          "package_name": "com.devran.nearx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "428783291330-8eceag1fai5ceh5pfj08paf97bucv6hq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.devran.nearx",
+            "certificate_hash": "c8e78ecc329b6f5874b8b58c89fa138350c68560"
+          }
+        },
+        {
+          "client_id": "428783291330-tk37agraupn4se0spuhv7oi2fnddi6i1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKKYsFH22kxmsf0Ke7V4QgzvvdMo8bQbY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "428783291330-tk37agraupn4se0spuhv7oi2fnddi6i1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "428783291330-1pu9eoj6mgeau5rgjknblla0nhq7vcu6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.devran.nearx"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
