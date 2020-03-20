@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>428783291330-1pu9eoj6mgeau5rgjknblla0nhq7vcu6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.428783291330-1pu9eoj6mgeau5rgjknblla0nhq7vcu6</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>428783291330-8eceag1fai5ceh5pfj08paf97bucv6hq.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC6DI0iExBzECHuTiY7mHaG5J5R46PosEU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>428783291330</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.devran.nearx</string>
+	<key>PROJECT_ID</key>
+	<string>possible-flame-271418</string>
+	<key>STORAGE_BUCKET</key>
+	<string>possible-flame-271418.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:428783291330:ios:3540e919c358d4661f645b</string>
+	<key>DATABASE_URL</key>
+	<string>https://possible-flame-271418.firebaseio.com</string>
+</dict>
+</plist>

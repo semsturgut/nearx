@@ -1,7 +1,8 @@
-import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -9,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Google Maps Demo',
+      title: 'nearX',
       home: MapSample(),
     );
   }
@@ -22,33 +23,45 @@ class MapSample extends StatefulWidget {
 
 class MapSampleState extends State<MapSample> {
   GoogleMapController _mapController;
+  Firestore firestore = Firestore.instance;
 
-  Set<Circle> _circles = HashSet<Circle>();
+  Set<Circle> _circles = Set();
+
   static LatLng _initialPosition;
   static LatLng _lastPosition;
 
   @override
   void initState() {
     super.initState();
-    _getUserLocation();
-    _setCircles();
+    setState(() {
+      _getUserLocation();
+      _getCircleLocation();
+    });
   }
 
-  void _setCircles() {
-    _circles.add(Circle(
-      circleId: CircleId("Infected Area"),
-      center: LatLng(39.890406, 32.847046),
-      radius: 1000,
-      fillColor: Color.fromRGBO(150, 50, 50, .3),
-      strokeWidth: 1,
-    ));
-    _circles.add(Circle(
-      circleId: CircleId("Infected Area 2"),
-      center: LatLng(39.870406, 32.897046),
-      radius: 2000,
-      fillColor: Color.fromRGBO(150, 50, 50, .3),
-      strokeWidth: 1,
-    ));
+  void _getCircleLocation() async {
+    await firestore
+        .collection("locations")
+        .getDocuments()
+        .then((QuerySnapshot snapshot) {
+      if (snapshot.documents.isNotEmpty)
+        for (int i = 0; i < snapshot.documents.length; i++) {
+          _setCircles(snapshot.documents.elementAt(i));
+        }
+    });
+  }
+
+  void _setCircles(DocumentSnapshot location) {
+    setState(() {
+      Circle resultCircle = Circle(
+        circleId: CircleId(_circles.length.toString()),
+        center: LatLng(location.data['latitude'], location.data['longitude']),
+        radius: 500,
+        fillColor: Color.fromRGBO(150, 50, 50, .3),
+        strokeWidth: 1,
+      );
+      _circles.add(resultCircle);
+    });
   }
 
   void _onCameraMove(CameraPosition position) {
@@ -89,7 +102,7 @@ class MapSampleState extends State<MapSample> {
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   initialCameraPosition:
-                      CameraPosition(target: _initialPosition, zoom: 12.0),
+                      CameraPosition(target: _initialPosition, zoom: 11.0),
                   circles: _circles,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
@@ -104,11 +117,31 @@ class MapSampleState extends State<MapSample> {
                     style: TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.w800,
-                        fontSize: 16.0),
+                        fontSize: 15.0),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.bottomCenter,
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 32),
+                  child: FloatingActionButton(
+                    onPressed: _addGeoPoint,
+                    isExtended: true,
+                    backgroundColor: Colors.redAccent,
+                    child: Icon(Icons.add),
                   ),
                 )
               ],
             ),
           );
+  }
+
+  Future<DocumentReference> _addGeoPoint() async {
+//    TODO: Change data type to geopoint.
+    return await firestore.collection('locations').add({
+      'latitude': _initialPosition.latitude,
+      'longitude': _initialPosition.longitude,
+      'hashcode': _initialPosition.hashCode,
+      'numbercases': 1
+    });
   }
 }
