@@ -2,18 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:async';
 
 //TODO: Unique ID ile veri gonderimi yapilacak (firebase auth ile yapilacak) ?
 //TODO: Mavi vaka gönderiminde uyarı penceresi eklenecek ?
-//TODO: Mavi ve Kırmızı dairelerin uyarıları ekranda asılı olacak(harita üzerine kırmızı/mavi yazı) halkaların açıklaması ?
-
-//TODO: general diye bir collection acilacak ve icinde maksimum kisi onay sayisi gibi gerekli veriler barindiracak -
 //TODO: Olası vakalar Mavi Kesinleşmiş vakalar Kırmızı -
-//TODO: Lokasyonlar 2 digit olarak gonderilecek. +
-//TODO: Aynı lokasyondan gönderilen 5 adet bildirim Mavi Olası vaka olarak yayınlanacak +
-//TODO: Mavi lokasyonlarda haberlerde kanıtlanmış vakalar Kırmızı olarak değiştirilecek ?
-//TODO: Documents ismi firebase database de koordinat ile degistirilecek +
 
 void main() => runApp(MyApp());
 
@@ -43,25 +35,23 @@ class MapSampleState extends State<MapSample> {
   static LatLng _lastPosition;
 
   int generalNumber = 0;
+  int caseCounter = 0;
+
+  int realCases = 0;
+  int realFatal = 0;
+
+  bool locationDataChecker = false;
 
   @override
   void initState() {
     super.initState();
     setState(() {
       _getUserLocation();
-      _getCircleLocation();
     });
   }
 
 //  Firebase'den halka loaksyonlarını topluyor
   void _getCircleLocation() async {
-    await firestore
-        .collection("general")
-        .document("maximumDataToBlueCircle")
-        .get()
-        .then((generalData) {
-      generalNumber = generalData.data["number"];
-    });
     await firestore
         .collection("locations")
         .getDocuments()
@@ -86,7 +76,7 @@ class MapSampleState extends State<MapSample> {
         circleId: CircleId(_circles.length.toString()),
         center: LatLng(location.data['latitude'], location.data['longitude']),
         radius: 500,
-        fillColor: Color.fromRGBO(50, 50, 150, .3),
+        fillColor: Color.fromRGBO(0, 0, 255, .1),
         strokeWidth: 1,
       );
       _circles.add(resultCircle);
@@ -104,9 +94,15 @@ class MapSampleState extends State<MapSample> {
   void _getUserLocation() async {
     Position position = await Geolocator()
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      _initialPosition = LatLng(position.latitude, position.longitude);
-    });
+    await firestore.collection("general").document("options").get().then((generalOptions) {
+          setState(() {
+            generalNumber = generalOptions.data["maxBlueCheck"];
+            realCases = generalOptions.data["realCase"];
+            realFatal = generalOptions.data["realFatal"];
+            _initialPosition = LatLng(position.latitude, position.longitude);
+            _getCircleLocation();
+          });
+        });
   }
 
 //  Maps olusturulduktan sonra yapilacaklar bu fonksiyonda
@@ -119,7 +115,7 @@ class MapSampleState extends State<MapSample> {
 //  Build ana tasarim elemanlari
   @override
   Widget build(BuildContext context) {
-    return _initialPosition == null
+    return (_initialPosition == null && generalNumber == 0)
         ? Container(
             alignment: Alignment.center,
             color: Colors.white,
@@ -135,7 +131,7 @@ class MapSampleState extends State<MapSample> {
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   initialCameraPosition:
-                      CameraPosition(target: _initialPosition, zoom: 11.0),
+                      CameraPosition(target: _initialPosition, zoom: 15.0),
                   circles: _circles,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
@@ -146,7 +142,51 @@ class MapSampleState extends State<MapSample> {
                   alignment: Alignment.topCenter,
                   padding: EdgeInsets.fromLTRB(0, 40, 0, 0),
                   child: Text(
-                    "Veriler gerçeği yansıtmayabilir.",
+                    "Veriler gerçeği yansıtmayabilir",
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.0),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.topCenter,
+                  padding: EdgeInsets.fromLTRB(0, 60, 0, 0),
+                  child: Text(
+                    "Mavi vakalar kullanıcılar tarafından iletilmiştir",
+                    style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.0),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.topCenter,
+                  padding: EdgeInsets.fromLTRB(0, 80, 0, 0),
+                  child: Text(
+                    "Kırmızı vakalar resmi verilerdir",
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.0),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.bottomLeft,
+                  padding: EdgeInsets.fromLTRB(10, 0, 0, 60),
+                  child: Text(
+                    "Vaka: " + realCases.toString(),
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.0),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.bottomLeft,
+                  padding: EdgeInsets.fromLTRB(10, 0, 0, 40),
+                  child: Text(
+                    "Ölüm: " + realFatal.toString(),
                     style: TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.w800,
@@ -156,11 +196,18 @@ class MapSampleState extends State<MapSample> {
                 Container(
                   alignment: Alignment.bottomCenter,
                   padding: EdgeInsets.fromLTRB(0, 0, 0, 32),
-                  child: FloatingActionButton(
+                  child: FloatingActionButton.extended(
                     onPressed: _addGeoPoint,
                     isExtended: true,
-                    backgroundColor: Colors.blueAccent,
-                    child: Icon(Icons.add),
+                    backgroundColor: Colors.white,
+                    label: Text(
+                      "Vaka ekle",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.black,
+                    ),
                   ),
                 )
               ],
@@ -170,23 +217,34 @@ class MapSampleState extends State<MapSample> {
 
 //  Kullanicinin bulundugu lokasyondaki vakayi firebase e ekleme
   void _addGeoPoint() async {
-    // <--- ASYNC
-//    TODO: Butun datalarla latlong karsilastirmasi yapilacak +
 //    TODO: FIREBASE AUTH karsilastirmasi ile daha once ayni noktadan veri gondermemisse +1 artacak
 //    TODO: Change data type to geopoint.
-//    TODO: Neden iki tane async var <--????-->
     String queryName = _initialPosition.latitude.toStringAsFixed(2) +
         '-_-' +
         _initialPosition.longitude.toStringAsFixed(2);
-    if (circleLocations.contains(queryName)) {
+
+    await firestore.collection("locations").getDocuments().then((value) {
+      for (int i = 0; i < value.documents.length; i++) {
+        if (value.documents.elementAt(i).documentID == queryName) {
+          locationDataChecker = true;
+          caseCounter = value.documents.elementAt(i).data["numbercases"];
+        }
+      }
+    });
+
+    if (locationDataChecker) {
+      locationDataChecker = false;
       for (int i = 0; i < circleLocations.length; i++) {
         if (circleLocations.elementAt(i).documentID == queryName) {
-          await firestore.collection("locations").document(queryName).updateData({
+          await firestore
+              .collection("locations")
+              .document(queryName)
+              .updateData({
             'latitude':
                 double.parse(_initialPosition.latitude.toStringAsFixed(2)),
             'longitude':
                 double.parse(_initialPosition.longitude.toStringAsFixed(2)),
-            'numbercases': circleLocations.elementAt(i).data['numbercases'] + 1
+            'numbercases': caseCounter + 1
           });
         }
       }
@@ -200,35 +258,3 @@ class MapSampleState extends State<MapSample> {
     }
   }
 }
-
-//if (element.documentID == queryName) {
-//await firestore.collection("locations").document(queryName).setData({
-//'latitude':
-//double.parse(_initialPosition.latitude.toStringAsFixed(2)),
-//'longitude':
-//double.parse(_initialPosition.longitude.toStringAsFixed(2)),
-//'numbercases': element.data['numbercases'] + 1
-//});
-//} else {
-//await firestore.collection("locations").document(queryName).setData({
-//'latitude':
-//double.parse(_initialPosition.latitude.toStringAsFixed(2)),
-//'longitude':
-//double.parse(_initialPosition.longitude.toStringAsFixed(2)),
-//'numbercases': () {
-//if (element.documentID == queryName)
-//element.data['numbercases'] = element.data['numbercases'] + 1;
-//return element.data['numbercases'];
-//}
-//});
-//}
-
-//await firestore.collection("locations").document(queryName).setData({
-//'latitude': double.parse(_initialPosition.latitude.toStringAsFixed(2)),
-//'longitude': double.parse(_initialPosition.longitude.toStringAsFixed(2)),
-//'numbercases': () {
-//if (circleLocations.elementAt(i).documentID == queryName)
-//circleLocations.elementAt(i).data['numbercases'] = circleLocations.elementAt(i).data['numbercases'] + 1;
-//return circleLocations.elementAt(i).data['numbercases'];
-//}
-//});
